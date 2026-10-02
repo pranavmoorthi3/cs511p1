@@ -17,5 +17,15 @@ fi
 ####################################################################################
 
 # Start HDFS/Spark worker here
+hdfs --daemon start datanode
+
+for attempt in {1..60}; do
+    if (echo > /dev/tcp/main/7077) 2>/dev/null; then
+        break
+    fi
+    sleep 2
+done
+
+"$SPARK_HOME/sbin/start-worker.sh" spark://main:7077
 
 bash

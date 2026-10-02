@@ -33,5 +33,15 @@ fi
 ####################################################################################
 
 # Start HDFS/Spark main here
+if [ ! -d "/opt/hadoop/data/nameNode/current" ]; then
+    hdfs namenode -format -force -nonInteractive
+fi
+
+hdfs --daemon start namenode
+hdfs --daemon start datanode
+
+rm -f /tmp/spark-*.pid
+"$SPARK_HOME/sbin/start-master.sh"
+"$SPARK_HOME/sbin/start-worker.sh" spark://main:7077
 
 bash

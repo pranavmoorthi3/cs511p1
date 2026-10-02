@@ -8,3 +8,4 @@ resources/wiki-full/*
 /STAFF_*.md
 /staff/
 /tests/test_staff_*.py
+.DS_Store

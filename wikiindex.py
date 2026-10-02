@@ -48,7 +48,26 @@ def parse_article(line):
     instead of failing the job.
     """
     # TODO: implement.
-    raise NotImplementedError("parse_article")
+    #raise NotImplementedError("parse_article")
+
+    try:
+        obj = json.loads(line)
+    except (ValueError, TypeError, RecursionError):
+        return None                      
+
+    if not isinstance(obj, dict):
+        return None                   
+
+    article_id = obj.get("id")
+    text = obj.get("text")
+
+    if isinstance(article_id, bool) or not isinstance(article_id, int):
+        return None
+    if not isinstance(text, str):
+        return None
+
+    return (article_id, text)
+
 
 
 def tokenize(text):
@@ -59,8 +78,15 @@ def tokenize(text):
     STOPWORDS. Repeated words are kept: the caller counts them.
     """
     # TODO: implement.
-    raise NotImplementedError("tokenize")
+    #raise NotImplementedError("tokenize")
+    
+    tokens = TOKEN_PATTERN.findall(text.lower())
+    return [t for t in tokens
+            if len(t) >= MIN_TOKEN_LENGTH and t not in STOPWORDS]
 
+def _emit_word_counts(article):
+    article_id, text = article
+    return [((word, article_id), 1) for word in tokenize(text)]
 
 def build_index(lines):
     """Turn an RDD of raw input lines into an RDD of (word, postings) pairs.
@@ -70,7 +96,15 @@ def build_index(lines):
     """
     # TODO: parse the lines, tokenize the text, count each (word, article_id)
     # pair, then group the counts by word.
-    raise NotImplementedError("build_index")
+    #raise NotImplementedError("build_index")
+
+    articles = lines.map(parse_article).filter(lambda a: a is not None)
+
+    counts = articles.flatMap(_emit_word_counts) \
+                     .reduceByKey(lambda a, b: a + b)
+
+    return counts.map(lambda kv: (kv[0][0], (kv[0][1], kv[1]))) \
+                 .groupByKey()
 
 
 def format_record(word, postings):
